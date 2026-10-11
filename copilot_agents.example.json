@@ -1,0 +1,23 @@
+{
+  "agents": [
+    {
+      "name": "dsh-cli",
+      "display": "DSH (headless)",
+      "enabled": false,
+      "program": "node",
+      "args": ["--import", "tsx/esm", "apps/cli/src/bin.ts", "headless", "--json", "{prompt}"],
+      "cwd": "C:/example/deepseek-harness",
+      "json_lines": true,
+      "needs_input_patterns": []
+    },
+    {
+      "name": "mock-ok",
+      "display": "Mock Agent",
+      "enabled": true,
+      "program": "python",
+      "args": ["tests/fixtures/mock_cli_agent.py", "--mode", "ok", "{prompt}"],
+      "json_lines": true,
+      "needs_input_patterns": ["^CONFIRM:"]
+    }
+  ]
+}

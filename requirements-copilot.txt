@@ -1,0 +1,5 @@
+# 副驾可选依赖（01 票实测锁定）。
+# 不安装本文件不破坏原有数据服务/搜索面板（copilot 相关导入全部懒加载）。
+agent-client-protocol==0.12.1
+# 桌面 MCP 工具面（07 票；mcp_enabled=false 时不需要）
+mcp==2.2.0

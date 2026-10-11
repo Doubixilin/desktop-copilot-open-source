@@ -1,0 +1,26 @@
+{
+	"title": "AGENT DECK",
+	"description": "多工具会话桌面作战面板：右栏会话混排 + 硬件仪表 + 桌面分区标签。数据来自本地数据服务 /deck。",
+	"type": "web",
+	"file": "index.html",
+	"visibility": "private",
+	"general": {
+		"properties": {
+			"perspective": {
+				"type": "bool",
+				"text": "HUD 透视",
+				"value": true
+			},
+			"fontsize": {
+				"type": "slider",
+				"text": "整体字号 (font scale)",
+				"fraction": true,
+				"min": 0.8,
+				"max": 2.0,
+				"step": 0.05,
+				"precision": 2,
+				"value": 1.4
+			}
+		}
+	}
+}

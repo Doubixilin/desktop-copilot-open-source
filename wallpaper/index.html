@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AGENT DECK</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="deck" class="grid">
+
+    <header id="topbar">
+      <span class="brand">AGENT<span class="dim">·</span>DECK</span>
+      <span id="offline-badge" class="offline hidden">OFFLINE</span>
+      <span id="clock" class="clock">--:--:--</span>
+      <span class="counter"><span class="dim">SESSIONS</span> <span id="session-count">000</span></span>
+    </header>
+
+    <aside id="sessions" class="hud-left">
+      <div class="col-head"><span class="dim">ACTIVE SESSIONS</span></div>
+      <ul id="session-list">
+        <li id="standby" class="standby">NO ACTIVE SESSIONS</li>
+      </ul>
+    </aside>
+
+    <main id="focus" class="hud-main">
+      <div class="col-head"><span class="dim">FOCUS</span></div>
+      <div id="focus-body" class="focus-standby">NO ACTIVE SESSIONS</div>
+    </main>
+
+    <footer id="gauges" class="hud-bottom">
+      <div id="gauges-row" class="gauges-row"></div>
+      <canvas id="curves"></canvas>
+    </footer>
+
+  </div>
+  <script src="deck.js"></script>
+</body>
+</html>

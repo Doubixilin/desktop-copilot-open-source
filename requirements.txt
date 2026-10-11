@@ -1,0 +1,4 @@
+psutil>=5.9
+zstandard>=0.22
+comtypes>=1.4
+rapidocr-onnxruntime>=1.4  # M4 L2 截图 OCR 兜底（缺失时自动降级，不影响其余功能）

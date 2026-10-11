@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; img-src 'self' data:">
+  <title>Agent Deck HUD</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section id="hud" class="hud is-hidden" role="dialog" aria-modal="false" aria-label="Agent Deck 工作台" inert>
+    <div id="scene-line" class="scene-line" hidden></div>
+    <div class="search-bar">
+      <span id="mode-icon" class="search-icon" aria-hidden="true"></span>
+      <input id="command" autocomplete="off" spellcheck="false" placeholder="搜索文件，或按 Tab 与 DSH 对话" aria-label="搜索文件" aria-controls="content" role="combobox" aria-expanded="false">
+      <div class="mode-switch" role="group" aria-label="工作模式">
+        <button id="files-mode" class="mode active" aria-pressed="true">文件</button>
+        <button id="chat-mode" class="mode" aria-pressed="false"><span class="spark-mini">✦</span> DSH</button>
+      </div>
+      <button id="submit" class="send-button" aria-label="发送任务" title="发送任务" hidden></button>
+    </div>
+    <div id="context-strip" class="context-strip" hidden>
+      <button id="project-button" class="project-button" aria-expanded="false" aria-controls="project-picker"></button>
+      <span id="conversation-label" class="conversation-label">新会话</span>
+      <button id="new-chat" class="new-chat" title="在当前项目中新建会话">＋ 新会话</button>
+    </div>
+    <div id="project-picker" class="project-picker" hidden aria-label="选择演示项目"></div>
+    <div id="attachment-strip" class="attachment-strip" hidden></div>
+    <div id="scene-strip" class="attachment-strip scene-strip" hidden></div>
+    <div id="body-shell" class="body-shell"><div id="content" class="content"></div></div>
+    <div id="activity-panel" class="activity-panel" hidden></div>
+    <div id="dev-panel" class="dev-panel" hidden>
+      <div class="demo-settings">
+        <label for="today-scenario">日程 / 待办场景</label>
+        <select id="today-scenario"><option value="connected">正常数据</option><option value="disconnected">未连接滴答</option><option value="offline">同步失败</option><option value="empty">今天没有安排</option><option value="write-error">完成待办失败</option></select>
+      </div>
+    </div>
+    <footer class="hud-footer">
+      <button id="activity-button" class="activity-button" aria-expanded="false" aria-controls="activity-panel"><span class="live-dot"></span><span id="activity-summary">2 项进行中</span><span class="footer-sep">·</span><span id="permission-summary" class="amber">1 项待确认</span></button>
+      <button id="system-button" class="system-button" aria-expanded="false" aria-controls="content" title="查看系统速览"></button>
+      <span class="footer-right">
+        <span id="demo-tag" class="demo-tag" title="日程与待办未连接时为合成演示；其他数据来源取决于宿主连接状态">演示数据</span>
+        <span id="key-hints" class="key-hints"><kbd>Tab</kbd> 切换 DSH <span class="hint-divider"></span><kbd>Esc</kbd> 收起</span>
+        <button id="dev-button" class="quiet-mini" hidden title="演示场景（开发入口）">场景</button>
+        <button id="exit-button" class="quiet-mini" title="退出 Agent Deck HUD">退出</button>
+      </span>
+    </footer>
+  </section>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>

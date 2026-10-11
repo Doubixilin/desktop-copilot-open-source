@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:">
+  <title>native hud spike</title>
+  <style>
+    html,body{margin:0;height:100%;background:transparent;font-family:"Microsoft YaHei UI","Segoe UI",sans-serif}
+    #panel{position:fixed;left:50%;top:21vh;transform:translateX(-50%);width:min(730px,calc(100vw - 40px));
+      border-radius:20px;border:1px solid rgba(217,238,250,.18);
+      background:linear-gradient(150deg,rgba(43,63,76,.88),rgba(17,32,44,.88) 65%,rgba(27,45,55,.84));
+      box-shadow:0 30px 100px #0006,0 10px 32px #0003;padding:22px;color:#f0f5f6}
+    #cmd{width:100%;box-sizing:border-box;background:transparent;border:none;outline:none;color:#f4f7fa;font-size:19px}
+    #events{margin-top:14px;font-size:11px;color:#8c9da7;white-space:pre-wrap;max-height:220px;overflow:auto}
+    .row{display:flex;gap:10px;margin-top:12px}
+    button{font-size:11px;color:#c3d9e5;border:1px solid #b9d3e51c;border-radius:6px;padding:6px 10px;background:#adcde008}
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <input id="cmd" placeholder="spike：输入文字 / 中文组词，Enter/Tab/Esc 观察事件" autocomplete="off" spellcheck="false">
+    <div class="row">
+      <button id="hide">隐藏(Esc)</button>
+      <button id="exit">退出</button>
+      <button id="ping">搜索适配 ping</button>
+    </div>
+    <div id="events"></div>
+  </div>
+  <script>
+  (function(){
+    const log = (m) => {
+      const el = document.getElementById('events');
+      el.textContent += new Date().toISOString().slice(11,23) + ' ' + m + '\n';
+      el.scrollTop = el.scrollHeight;
+      if (window.chrome?.webview) chrome.webview.postMessage({type:'log', msg:m});
+      console.log(m);
+    };
+    const cmd = document.getElementById('cmd');
+    cmd.addEventListener('compositionstart', () => log('compositionstart'));
+    cmd.addEventListener('compositionupdate', (e) => log('compositionupdate: ' + e.data));
+    cmd.addEventListener('compositionend', (e) => log('compositionend: ' + e.data));
+    cmd.addEventListener('keydown', (e) => {
+      log(`keydown key=${e.key} code=${e.code} keyCode=${e.keyCode} isComposing=${e.isComposing}`);
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Escape') { e.preventDefault(); chrome.webview.postMessage({type:'hide'}); }
+    });
+    cmd.addEventListener('input', () => log('input: ' + cmd.value));
+    document.getElementById('hide').addEventListener('click', () => chrome.webview.postMessage({type:'hide'}));
+    document.getElementById('exit').addEventListener('click', () => chrome.webview.postMessage({type:'exit'}));
+    document.getElementById('ping').addEventListener('click', () => chrome.webview.postMessage({type:'log', msg:'ping-clicked'}));
+    document.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('#panel')) { log('pointerdown outside panel -> hide'); chrome.webview.postMessage({type:'hide'}); }
+    });
+    window.addEventListener('focus', () => log('window focus'));
+    window.addEventListener('blur', () => log('window blur'));
+    if (window.chrome?.webview) {
+      chrome.webview.addEventListener('message', (e) => {
+        const m = e.data;
+        log('host->page: ' + JSON.stringify(m));
+        if (m.type === 'visibility' && m.visible) cmd.focus();
+      });
+    }
+    chrome.webview.postMessage({type:'ready'});
+    log('spike loaded; UA=' + navigator.userAgent.slice(0, 80));
+  })();
+  </script>
+</body>
+</html>

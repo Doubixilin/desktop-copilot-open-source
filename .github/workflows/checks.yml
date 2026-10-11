@@ -1,0 +1,29 @@
+name: Public source checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python -m pip install pytest psutil zstandard comtypes agent-client-protocol==0.12.1 mcp==2.2.0
+      - name: Publication filenames, patterns and links
+        run: python scripts/check_public.py
+      - name: Core regression without desktop windows or OCR captures
+        run: python -m pytest tests/test_archive.py tests/test_settlement.py tests/test_scene_package.py tests/test_scene_fusion.py tests/test_copilot_hud_api.py tests/test_copilot_handoff.py tests/test_copilot_projection.py -q
+      - name: HUD UI state regression
+        run: node --test tests/test_native_hud_ui.mjs
+      - name: Build native host
+        run: dotnet build native_hud/host -c Release --nologo

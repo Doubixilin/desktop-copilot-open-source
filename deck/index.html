@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AGENT DECK</title>
+<style>
+/* 视觉常量与 search_panel.py 同源：FG #d6d6d6 / DIM #616161 / LINE #2c2c2c / BG #000 */
+
+
+/* 1rem = 16px @2560×1440，随宽度缩放（面板几何按 2560×1440 @100% 设计）。
+   --font-scale：整体字号系数（WE 属性 fontsize 滑杆，默认 1.4）——高分屏上
+   2560 基准偏小，搜索面板的几何/字号在 search_panel.py 里用同一系数推导。 */
+html { font-size: calc(100vw / 160 * var(--font-scale, 1.4)); }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+body {
+  font-family: Consolas, "Courier New", monospace;
+  color: #d6d6d6;
+  user-select: none;
+  cursor: default;
+}
+
+/* ---- 顶栏：标题 + 时钟 + 活跃计数，下缘分隔线（顶栏 4.6rem，上边距 2.2rem）---- */
+#topbar {
+  position: fixed;
+  left: 2.6rem;
+  right: 2.6rem;
+  top: 2.2rem;
+  height: 4.6rem;
+  border-bottom: 1px solid #2c2c2c;
+}
+#brand {
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: #fff;
+}
+#clock {
+  position: absolute;
+  left: 50%;
+  top: -0.5rem;
+  transform: translateX(-50%);
+  font-family: Consolas, monospace;
+  font-size: 2.5rem;
+  color: #fff;
+}
+#sessioncount {
+  position: absolute;
+  right: 0;
+  top: 0.55rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.25em;
+  color: #616161;
+}
+
+/* ---- 右窄栏：宽 36rem，分隔线贴栏左缘；顶部留搜索面板槽位，硬件块钉底 ---- */
+#right {
+  position: fixed;
+  right: 2.6rem;
+  top: 6.8rem;      /* 2.2rem 上边距 + 4.6rem 顶栏 */
+  bottom: 2.2rem;
+  width: 36rem;
+  box-sizing: border-box;
+  border-left: 1px solid #2c2c2c;
+  padding: 1.6rem 0 0 2.4rem;   /* 内容左缘 ≈ x1982，与搜索面板窗口对齐 */
+  display: flex;
+  flex-direction: column;
+  transform-origin: left center;
+}
+#right.perspective {
+  transform: perspective(1200px) rotateY(1.2deg);
+}
+#searchspacer {
+  /* 高度随 /deck 的 panel.h 自适应（Tk 面板窗画 SEARCH 头与输入行，壁纸只留槽位） */
+  flex: none;
+  width: 100%;
+}
+#sessionshead {
+  flex: none;
+  margin-top: 1.4rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.25em;
+  color: #fff;
+}
+#rows {
+  flex: none;
+  margin-top: 0.9rem;
+}
+.row {
+  display: grid;
+  grid-template-columns: 2.6ch 8.5ch 1fr 9ch;
+  column-gap: 1.2ch;
+  align-items: baseline;
+  height: 2.1rem;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+.row .tag   { color: #616161; }
+.row .state { color: #616161; }
+.row .state.run, .row .state.confirm { color: #fff; font-weight: 700; }
+.row .name {
+  color: #d6d6d6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .tasks { color: #616161; text-align: right; }
+#standby {
+  margin-top: 0.2rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.2em;
+  color: #616161;
+}
+
+/* ---- 硬件块：右下角两行，数值全定长防换行抖动 ---- */
+#gauges {
+  margin-top: auto;
+  padding-bottom: 0.2rem;
+  font-size: 1.05rem;
+  line-height: 2.25rem;
+  text-align: right;
+  color: #616161;
+  transform-origin: center bottom;
+}
+#gauges.perspective {
+  transform: rotateX(-1.2deg);
+}
+#gauges .v { color: #9a9a9a; }
+#offline {
+  display: none;
+  margin-bottom: 0.6rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.3em;
+  color: #fff;
+  animation: blink 1.2s steps(2, start) infinite;
+}
+#offline.on { display: block; }
+@keyframes blink { to { visibility: hidden; } }
+
+/* ---- 桌面分区标签（desktop-zone-management 票 10 定稿坐标）---- */
+#zonelabel {
+  position: fixed;
+  left: 13px;
+  top: 330px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="brand">AGENT DECK</div>
+  <div id="clock">--:--:--</div>
+  <div id="sessioncount">SESSIONS 000</div>
+</div>
+
+<div id="right" class="perspective">
+  <div id="searchspacer"></div>
+  <div id="sessionshead">SESSIONS</div>
+  <div id="rows"></div>
+  <div id="standby">NO ACTIVE SESSIONS</div>
+  <div id="gauges" class="perspective">
+    <div id="offline">OFFLINE</div>
+    <div id="gauge1">CPU ---% &middot; GPU ---% ---&deg;C &middot; VRAM ---%</div>
+    <div id="gauge2">RAM ---% -- GB/-- GB &middot; DL ----KB/s &middot; UP ----KB/s</div>
+  </div>
+</div>
+
+<div id="zonelabel">&#9650; APP 6&times;2 &#26694;&#20301; &middot; &#25163;&#38025;&#20248;&#20808;&#12288;&#65295;&#12288;&#9660; DOC &#25353;&#31867;&#22411;&#20998;&#21015; &middot; &#26032;&#22312;&#19978;</div>
+
+<script>
+"use strict";
+
+// ---- 壁纸属性：HUD 透视开关（默认开，rotateY 1.2deg 同 TERMINAL 02 量级）----
+window.wallpaperPropertyListener = {
+  applyUserProperties: function (p) {
+    if (p.fontsize) {
+      var v = Number(p.fontsize.value);
+      if (!isNaN(v)) {
+        document.documentElement.style.setProperty("--font-scale", String(v));
+      }
+    }
+    if (p.perspective) {
+      document.getElementById("right").classList.toggle("perspective", !!p.perspective.value);
+      document.getElementById("gauges").style.transform =
+        p.perspective.value ? "rotateX(-1.2deg)" : "none";
+    }
+  }
+};
+
+// ---- 时钟：本地时间，服务离线也照走 ----
+function tick() {
+  var d = new Date();
+  function p2(n) { return String(n).padStart(2, "0"); }
+  document.getElementById("clock").textContent =
+    p2(d.getHours()) + ":" + p2(d.getMinutes()) + ":" + p2(d.getSeconds());
+}
+setInterval(tick, 1000);
+tick();
+
+var TOOL_TAGS = { qoder: "QD", kimicode: "KC", kimiwork: "KW", zcode: "ZC", hermes: "HM", codex: "CX", dsh: "DH" };
+var pad3 = function (n) { return String(n).padStart(3, "0"); };
+var esc = function (s) {
+  return s.replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+};
+// 本机无 nvidia-smi 时 GPU/VRAM 字段缺位，一律 "---" 兜底
+var pct = function (x) { return x == null ? "---" : pad3(Math.round(x)); };
+var kbps = function (x) { return x == null ? "----" : Number(x).toFixed(2).padStart(6, "0") + "KB/s"; };
+
+function renderSessions(sessions) {
+  var rows = document.getElementById("rows");
+  var standby = document.getElementById("standby");
+  rows.innerHTML = "";
+  standby.style.display = sessions.length ? "none" : "block";
+  sessions.forEach(function (s) {
+    var el = document.createElement("div");
+    el.className = "row";
+    el.dataset.key = s.tool + "+" + s.id;
+    var tasks = (s.tasks_done == null || s.tasks_total == null)
+      ? "" : pad3(s.tasks_done) + "/" + pad3(s.tasks_total);
+    var state = String(s.state || "IDLE").toLowerCase();
+    el.innerHTML =
+      '<span class="tag">' + (TOOL_TAGS[s.tool] || "??") + "</span>" +
+      '<span class="state ' + esc(state) + '">' + esc(String(s.state || "IDLE")) + "</span>" +
+      '<span class="name">' + esc(String(s.project || "")) + "</span>" +
+      '<span class="tasks">' + tasks + "</span>";
+    rows.appendChild(el);
+  });
+  document.getElementById("sessioncount").textContent =
+    "SESSIONS " + pad3(sessions.length);
+}
+
+function renderGauges(g, online) {
+  var line1, line2;
+  if (!online || !g) {
+    line1 = 'CPU ---% \u00b7 GPU ---% ---\u00b0C \u00b7 VRAM ---%';
+    line2 = 'RAM ---% -- GB/-- GB \u00b7 DL ----KB/s \u00b7 UP ----KB/s';
+  } else {
+    // 定长格式：整数补零三位 + 固定两位小数，防换行抖动
+    line1 = "CPU " + pct(g.cpu) + "% \u00b7 GPU " + pct(g.gpu_usage) + "% " +
+      pct(g.gpu_temp) + "\u00b0C \u00b7 VRAM " + pct(g.vram_usage) + "%";
+    line2 = "RAM " + pct(g.memory) + "% " + (g.memory_gb || "-- GB/-- GB") +
+      " \u00b7 DL " + kbps(g.download_speed) +
+      " \u00b7 UP " + kbps(g.upload_speed);
+  }
+  document.getElementById("gauge1").textContent = line1;
+  document.getElementById("gauge2").textContent = line2;
+}
+
+function setConn(state) {
+  // connecting：首帧连接中；offline：服务不可达；auth：给了令牌但服务端 trusted=false
+  connState = state;
+  var el = document.getElementById("offline");
+  el.classList.toggle("on", state !== "online");
+  el.textContent = state === "auth" ? "AUTH" : state === "connecting" ? "CONNECTING" : "OFFLINE";
+  if (state === "offline") {
+    document.getElementById("searchspacer").style.height = "64px"; // 离线兜底槽位
+  }
+  if (!hasData) {
+    var standby = document.getElementById("standby");
+    standby.textContent = state === "connecting" ? "CONNECTING…" : "NO ACTIVE SESSIONS";
+  }
+}
+
+// 数据请求的令牌注入（服务端敏感字段默认裁剪，F01）：页面 URL ?token= 优先，
+// 其次 localStorage.qd_token（WE 开发者控制台一次性 set 即可持续取数）
+var API_URL = "http://127.0.0.1:5000/deck";
+var TOKEN_SUPPLIED = false;
+(function () {
+  var token = null;
+  var m = /(?:^|[?&])token=([^&]+)/.exec(location.search);
+  if (m) token = decodeURIComponent(m[1]);
+  else { try { token = localStorage.getItem("qd_token"); } catch (e) {} }
+  if (token) {
+    TOKEN_SUPPLIED = true;
+    API_URL += "?token=" + encodeURIComponent(token);
+  }
+})();
+
+// 指数退避轮询：1s 起翻倍、30s 封顶，恢复即回 1s；服务宕机不再每秒打无效请求
+var POLL_MAX_MS = 30000;
+var pollDelay = 1000;
+var connState = "connecting";
+var pollFails = 0;
+var hasData = false;
+
+async function poll() {
+  var d = null;
+  try {
+    var r = await fetch(API_URL, { cache: "no-store" });
+    if (r.ok) d = await r.json();
+  } catch (e) {}
+  if (d === null) {
+    // 保留上一帧会话列表，仅仪表演降级 + 离线角标
+    pollFails++;
+    pollDelay = Math.min(POLL_MAX_MS, pollDelay * 2);
+    setConn(!hasData && pollFails < 3 ? "connecting" : "offline");
+    renderGauges(null, false);
+  } else {
+    hasData = true;
+    pollFails = 0;
+    pollDelay = 1000;
+    setConn(TOKEN_SUPPLIED && d.trusted === false ? "auth" : "online");
+    if (d.panel && d.panel.h) {
+      document.getElementById("searchspacer").style.height = d.panel.h + "px";
+    }
+    renderSessions(d.sessions || []);
+    renderGauges(d.gauges, true);
+  }
+  setTimeout(poll, pollDelay);
+}
+setConn("connecting");
+poll();
+</script>
+</body>
+</html>

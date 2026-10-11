@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "panel_mode": "copilot",
+  "runtime": {
+    "executable": "C:\\absolute\\path\\to\\deepseek-harness-sdk-runtime-win-x64.exe",
+    "args": ["--profile", "acp"],
+    "launch_cwd": "C:\\absolute\\path\\to\\neutral\\dir",
+    "dsh_home": "C:\\absolute\\path\\to\\copilot-dsh-home"
+  },
+  "default_workspace": null,
+  "idle_shutdown_seconds": 600,
+  "initialize_timeout_seconds": 30,
+  "cancel_warning_seconds": 10,
+  "deck_base_url": "http://127.0.0.1:5000",
+  "mcp_enabled": false
+}

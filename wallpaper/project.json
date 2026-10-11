@@ -1,0 +1,36 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "AGENT DECK 桌面作战面板：五工具 AI 会话状态混排（Qoder / kimi code / kimi work / zcode / hermes）、聚焦会话任务详情、硬件仪表与 CPU/网速历史曲线。数据来自本机数据服务 127.0.0.1:5000（配套仓库 desktop-deck）。",
+	"file" : "index.html",
+	"general" :
+	{
+		"properties" :
+		{
+			"perspective" :
+			{
+				"index" : 0,
+				"order" : 100,
+				"text" : "HUD perspective (座舱环抱/仪表俯倾)",
+				"type" : "bool",
+				"value" : true
+			},
+			"fontsize" :
+			{
+				"index" : 1,
+				"order" : 101,
+				"text" : "font scale (整体字号)",
+				"type" : "slider",
+				"fraction" : true,
+				"min" : 0.8,
+				"max" : 1.8,
+				"step" : 0.05,
+				"precision" : 2,
+				"value" : 1.3
+			}
+		}
+	},
+	"tags" : [ " monospace", " terminal", " hud", " dashboard", " minimal", " black", " web" ],
+	"title" : "AGENT DECK",
+	"type" : "web",
+	"visibility" : "private"
+}
